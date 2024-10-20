@@ -1,0 +1,30 @@
+<?php
+include 'database.php';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $user_id = $_POST['user_id'];
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+
+    if (empty($user_id)) {
+        // Añadir nuevo usuario
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+        $stmt = $conn->prepare('INSERT INTO users (username, password) VALUES (?, ?)');
+        $stmt->bind_param('ss', $username, $hashed_password);
+        $stmt->execute();
+        echo 'Usuario añadido con éxito';
+    } else {
+        // Modificar usuario existente
+        if (!empty($password)) {
+            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+            $stmt = $conn->prepare('UPDATE users SET username = ?, password = ? WHERE id = ?');
+            $stmt->bind_param('ssi', $username, $hashed_password, $user_id);
+        } else {
+            $stmt = $conn->prepare('UPDATE users SET username = ? WHERE id = ?');
+            $stmt->bind_param('si', $username, $user_id);
+        }
+        $stmt->execute();
+        echo 'Usuario modificado con éxito';
+    }
+}
+?>
